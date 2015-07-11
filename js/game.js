@@ -98,7 +98,12 @@ currentBetSelection = 0;
 currentOddSelection = 0;
 currentWinningCalculation = "25p";
 
-
+// sound variables
+var sounds = {
+	coin : null,
+	thud : null,
+	bonus : null
+}
 window.onload = function() 
 {
 	canvas = document.getElementById('game');
@@ -106,16 +111,24 @@ window.onload = function()
 	canvasHeight = canvas.height;
 	canvasWidth = canvas.width;
 	
+	canvas.addEventListener('click', ClickButtons);
+	
+	LoadResources();
+	GameLoop();
+};
+
+function LoadResources()
+{
 	buildingImage.source.src = 'resources/building.jpg';
 	arrows.UPimg.src = 'resources/arrow-UP.png';
 	arrows.DOWNimg.src = 'resources/arrow-DOWN.png';
 	playButton.img.src = 'resources/play.png';
 	title.img.src = 'resources/title.png'
 	
-	canvas.addEventListener('click', ClickButtons);
-	
-	GameLoop();
-};
+	sounds.coin =  new Audio('resources/coins.wav');
+	sounds.thud =  new Audio('resources/thud.wav');
+	sounds.bonus = new Audio('resources/bonus.wav');
+}
 
 function DisplayInfoScreen()
 {
@@ -159,7 +172,6 @@ function DisplayInfoScreen()
 	canvasContext.drawImage(playButton.img, playButton.x, playButton.y, playButton.width, playButton.height);
 }
 
-
 function ClickButtons(event) 
 {
 	mouseX = event.pageX - document.getElementById('game').offsetLeft;
@@ -181,6 +193,7 @@ function ClickButtons(event)
 	}
 	else if (mouseX > arrows.betUP.x && mouseX < arrows.betUP.x + arrows.size && mouseY > arrows.betUP.y && mouseY < arrows.betUP.y + arrows.size) 
 	{
+		sounds.coin.play();
 		if (currentBetSelection < bettingAmounts.length -1)
 		{
 			currentBetSelection++;
@@ -188,6 +201,7 @@ function ClickButtons(event)
 	}
 	else if (mouseX > arrows.betDOWN.x && mouseX < arrows.betDOWN.x + arrows.size && mouseY > arrows.betDOWN.y && mouseY < arrows.betDOWN.y + arrows.size) 
 	{
+		sounds.coin.play();
 		if (currentBetSelection > 0)
 		{
 			currentBetSelection--;
@@ -232,9 +246,16 @@ function StartGame()
 	combo = 0,
 	target = floorOdds[currentOddSelection].level;
 	winnings = currentWinningCalculation;
-	previousFloors = new Array(5);
+	
+	for ( i = 0 ; i < previousFloors.length ; i++)
+	{
+		previousFloors[i] = {
+			width : floor.width,
+			position : targetPosition,
+			spriteID : Math.floor(Math.random() * 3) + 1 
+		}
+	}
 }
-
 function GameOver()
 {
 	canvas.addEventListener('click',ClickButtons);
@@ -273,7 +294,6 @@ function GameLoop()
 		else
 		{
 			DisplayInfoScreen();
-			
 		}
 
         lastTime = currentTime - (delta % interval);
@@ -293,9 +313,24 @@ function Update()
 
 function Draw()
 {
+	DrawBackground();
 	DrawGameInfo();
 	DrawCurrentFloor();
 	DrawPreviousFloors();
+}
+
+function DrawBackground()
+{
+	canvasContext.beginPath();
+	canvasContext.rect(0, 0, canvasWidth, canvasHeight);
+	
+	var grd = canvasContext.createLinearGradient(0, 0, 0, canvasHeight);
+    // light blue
+    grd.addColorStop(0, '#5ECFFF');   
+    // dark blue
+    grd.addColorStop(1, 'white');
+    canvasContext.fillStyle = grd;
+	canvasContext.fill();
 }
 
 function UpdateCurrentFloor()
@@ -322,7 +357,6 @@ function DrawCurrentFloor()
 	  floor.height);
 
 }
-
 
 function DrawPreviousFloors()
 {
@@ -409,11 +443,12 @@ function DrawGameInfo()
 	canvasContext.fillText(comboString, canvasWidth - canvasContext.measureText(comboString).width -5, 40);
 
 }
+
 function PlaceFloor()
 {
 	var difference = Math.abs(floor.position - targetPosition);
 	
-	
+	sounds.thud.play();
 	if (difference > marginOfError)
 	{
 		floor.width -= difference;
