@@ -58,7 +58,7 @@ var previousFloors = new Array(5);
 
 var floorLevel = 0,
 	combo = 0,
-	Winnings = "",
+	winnings = "",
 	target = 0,
 	bet = 0,
 	instructions = 'Welcome! The aim of the game is to build the tower to reach your target. You place a floor by simply tapping or clicking anywhere on the screen. You will have to time the placement right or you will end up with less room to build the next floor on!. As your tower gets higher and higher the speed will increase\n If you manage to place a floor perfectly 5x in a row you can earn one of the following bonuses:\n - Slow Speed\n - 2x Extra Floors',
@@ -94,16 +94,33 @@ bettingAmounts[2] = { value: 1, unit : "£" };
 bettingAmounts[3] = { value: 2, unit : "£" };
 bettingAmounts[4] = { value: 5, unit : "£" };
 
-currentBetSelection = 0;
-currentOddSelection = 0;
+currentBetIndex = 0;
+currentOddIndex = 0;
 currentWinningCalculation = "25p";
 
 // sound variables
 var sounds = {
 	coin : null,
 	thud : null,
-	bonus : null
+	bonus : null,
+	win : null,
+	lose : null
 }
+
+// variables to do with bonuses
+var bonuses = {
+	slowSpeed : 3,
+	bonusFloors : 2,
+	slowSpeedMessage : "Floor Speed Slowed!",
+	bonusFloorMessage: "x Floors Added!",
+	active : false,
+	slowSpeedActive : false,
+	position : {
+		x : 5,
+		y : 80
+	}
+}
+
 window.onload = function() 
 {
 	canvas = document.getElementById('game');
@@ -111,6 +128,7 @@ window.onload = function()
 	canvasHeight = canvas.height;
 	canvasWidth = canvas.width;
 	
+	bonuses.bonusFloorMessage = bonuses.bonusFloors + bonuses.bonusFloorMessage;
 	canvas.addEventListener('click', ClickButtons);
 	
 	LoadResources();
@@ -128,6 +146,8 @@ function LoadResources()
 	sounds.coin =  new Audio('resources/coins.wav');
 	sounds.thud =  new Audio('resources/thud.wav');
 	sounds.bonus = new Audio('resources/bonus.wav');
+	sounds.win = new Audio('resources/win.wav');
+	sounds.lose = new Audio('resources/lose.wav');
 }
 
 function DisplayInfoScreen()
@@ -152,18 +172,18 @@ function DisplayInfoScreen()
 	canvasContext.drawImage(arrows.UPimg, arrows.betUP.x, arrows.betUP.y, arrows.size, arrows.size);
 	canvasContext.drawImage(arrows.DOWNimg, arrows.betDOWN.x, arrows.betDOWN.y, arrows.size, arrows.size);
 	
-	var oddsString = "Target: " + floorOdds[currentOddSelection].level + " floors (" + floorOdds[currentOddSelection].odds + ")";
+	var oddsString = "Target: " + floorOdds[currentOddIndex].level + " floors (" + floorOdds[currentOddIndex].odds + ")";
 	canvasContext.fillText(oddsString, arrows.targetDOWN.x - canvasContext.measureText(oddsString).width, arrows.targetDOWN.y);
 	
 	var betString ="";
 	
-	if (bettingAmounts[currentBetSelection].unit == "£")
+	if (bettingAmounts[currentBetIndex].unit == "£")
 	{
-		betString= "Bet: " + bettingAmounts[currentBetSelection].unit + bettingAmounts[currentBetSelection].value;
+		betString= "Bet: " + bettingAmounts[currentBetIndex].unit + bettingAmounts[currentBetIndex].value;
 	}
 	else
 	{
-		betString= "Bet: " + bettingAmounts[currentBetSelection].value + bettingAmounts[currentBetSelection].unit;
+		betString= "Bet: " + bettingAmounts[currentBetIndex].value + bettingAmounts[currentBetIndex].unit;
 	}
 	canvasContext.fillText(betString, arrows.betDOWN.x - canvasContext.measureText(betString).width, arrows.betDOWN.y);
 	
@@ -179,32 +199,32 @@ function ClickButtons(event)
 	
 	if (mouseX > arrows.targetUP.x && mouseX < arrows.targetUP.x + arrows.size && mouseY > arrows.targetUP.y && mouseY < arrows.targetUP.y + arrows.size) 
 	{
-		if (currentOddSelection < floorOdds.length -1)
+		if (currentOddIndex < floorOdds.length -1)
 		{
-			currentOddSelection++;
+			currentOddIndex++;
 		}
 	}
 	else if (mouseX > arrows.targetDOWN.x && mouseX < arrows.targetDOWN.x + arrows.size && mouseY > arrows.targetDOWN.y && mouseY < arrows.targetDOWN.y + arrows.size) 
 	{
-		if (currentOddSelection > 0)
+		if (currentOddIndex > 0)
 		{
-			currentOddSelection--;
+			currentOddIndex--;
 		}
 	}
 	else if (mouseX > arrows.betUP.x && mouseX < arrows.betUP.x + arrows.size && mouseY > arrows.betUP.y && mouseY < arrows.betUP.y + arrows.size) 
 	{
 		sounds.coin.play();
-		if (currentBetSelection < bettingAmounts.length -1)
+		if (currentBetIndex < bettingAmounts.length -1)
 		{
-			currentBetSelection++;
+			currentBetIndex++;
 		}
 	}
 	else if (mouseX > arrows.betDOWN.x && mouseX < arrows.betDOWN.x + arrows.size && mouseY > arrows.betDOWN.y && mouseY < arrows.betDOWN.y + arrows.size) 
 	{
 		sounds.coin.play();
-		if (currentBetSelection > 0)
+		if (currentBetIndex > 0)
 		{
-			currentBetSelection--;
+			currentBetIndex--;
 		}
 	}
 	else if (mouseX > playButton.x && mouseX < playButton.x + playButton.width && mouseY > playButton.y && mouseY < playButton.y + playButton.height)
@@ -218,9 +238,10 @@ function ClickButtons(event)
 function CalculateWinings()
 {
 	// converts £ to pence
-	var pence = bettingAmounts[currentBetSelection].unit == "£" ? (bettingAmounts[currentBetSelection].value * 100) : bettingAmounts[currentBetSelection].value;
+	var pence = bettingAmounts[currentBetIndex].unit == "£" ? (bettingAmounts[currentBetIndex].value * 100) : bettingAmounts[currentBetIndex].value;
+	var pence = bettingAmounts[currentBetIndex].unit == "£" ? (bettingAmounts[currentBetIndex].value * 100) : bettingAmounts[currentBetIndex].value;
 	
-	var betChance = floorOdds[currentOddSelection].odds.split(':');
+	var betChance = floorOdds[currentOddIndex].odds.split(':');
 	
 	var betIncrease = (betChance[0] / betChance[1]) * pence;
 	
@@ -244,7 +265,7 @@ function StartGame()
 	targetPosition = (canvasWidth / 2) - (floor.width / 2);
 	floorLevel = 0,
 	combo = 0,
-	target = floorOdds[currentOddSelection].level;
+	target = floorOdds[currentOddIndex].level;
 	winnings = currentWinningCalculation;
 	
 	for ( i = 0 ; i < previousFloors.length ; i++)
@@ -256,6 +277,7 @@ function StartGame()
 		}
 	}
 }
+
 function GameOver()
 {
 	canvas.addEventListener('click',ClickButtons);
@@ -265,11 +287,13 @@ function GameOver()
 	
 	if (lost)
 	{
+		sounds.lose.play();
 		title.img.src = 'resources/game-over.png';
 		dispalyText = 'Oh No! Unfortunetly you didnt make it to your target level, better luck next time. Would you like to play again?';
 	}
 	else
 	{
+		sounds.win.play();
 		title.img.src = 'resources/won.png';
 		dispalyText = 'Congratdulations! You managed to make it to your target floor. ' + winnings + ' has been added to your account. Would you like to play again?';
 	}
@@ -317,6 +341,11 @@ function Draw()
 	DrawGameInfo();
 	DrawCurrentFloor();
 	DrawPreviousFloors();
+	
+	if (bonuses.active)
+	{
+		DrawBonusAlert();
+	}
 }
 
 function DrawBackground()
@@ -325,10 +354,9 @@ function DrawBackground()
 	canvasContext.rect(0, 0, canvasWidth, canvasHeight);
 	
 	var grd = canvasContext.createLinearGradient(0, 0, 0, canvasHeight);
-    // light blue
     grd.addColorStop(0, '#5ECFFF');   
-    // dark blue
     grd.addColorStop(1, 'white');
+	
     canvasContext.fillStyle = grd;
 	canvasContext.fill();
 }
@@ -337,10 +365,24 @@ function UpdateCurrentFloor()
 {
 	if (floor.position + floor.width >= canvasWidth || floor.position <= 0) // if the floor has reached the edge of the screen
 	{
-		floor.speed = floor.speed - (floor.speed * 2); //flips the direction the floor is travelling
+		if (bonuses.slowSpeedActive)
+		{
+			bonuses.slowSpeed = bonuses.slowSpeed - (bonuses.slowSpeed * 2);
+		}
+		else
+		{
+			floor.speed = floor.speed - (floor.speed * 2); //flips the direction the floor is travelling
+		}
 	}
 	
-	floor.position += floor.speed;
+	if (bonuses.slowSpeedActive) // checking to see if the slow speed bonus is active
+	{
+		floor.position += bonuses.slowSpeed;
+	}
+	else
+	{
+		floor.position += floor.speed;
+	}
 }
 
 function DrawCurrentFloor()
@@ -432,7 +474,6 @@ function DrawGameInfo()
 	canvasContext.fillStyle = '#33CCCC';
 	canvasContext.fill();
 	
-	
 	canvasContext.fillStyle = 'blue';
 	canvasContext.font = 'italic 20pt Helvetica';
 	
@@ -444,11 +485,30 @@ function DrawGameInfo()
 
 }
 
+function DrawBonusAlert()
+{
+	canvasContext.fillStyle = 'blue';
+	canvasContext.font = 'italic 20pt Helvetica';
+	
+	if (bonuses.slowSpeedActive)
+	{
+		canvasContext.fillText(bonuses.slowSpeedMessage, bonuses.position.x, bonuses.position.y);
+	}
+	else
+	{
+		canvasContext.fillText(bonuses.bonusFloorMessage, bonuses.position.x, bonuses.position.y);
+	}
+}
+
 function PlaceFloor()
 {
 	var difference = Math.abs(floor.position - targetPosition);
-	
 	sounds.thud.play();
+	
+	// resets the bonuses
+	bonuses.active = false;
+	bonuses.slowSpeedActive = false;
+	
 	if (difference > marginOfError)
 	{
 		floor.width -= difference;
@@ -472,11 +532,34 @@ function PlaceFloor()
 		combo++;
 	}
 	
+	if ((combo % 5) == 0 && combo != 0)
+	{
+		ApplyBonus();
+	}
+	
 	SetupPreviousFloors();
 	
 	floor.position = 1;
 	floorLevel++;
 	floor.speed +=0.25;
+}
+
+function ApplyBonus()
+{
+	sounds.bonus.play();
+	bonuses.active = true;
+	if ((Math.floor(Math.random() * 2) + 1) == 1)
+	{
+		bonuses.slowSpeedActive = true;
+	}
+	else
+	{
+		for ( i = 0 ; i < bonuses.bonusFloors ; i++)
+		{
+			SetupPreviousFloors();
+			floorLevel++;
+		}
+	}
 }
 
 function SetupPreviousFloors()
