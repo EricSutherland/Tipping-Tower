@@ -248,7 +248,7 @@ function CalculateWinings()
 	pence += betIncrease; 
 	
 	//checks if the amount is greater then a pound before storing
-	currentWinningCalculation = pence >= 100 ? "£" + (pence / 100) : pence + "p";	
+	currentWinningCalculation = pence >= 100 ? "£" + (pence / 100).toFixed(2) : pence + "p";	
 }
 
 function StartGame()
@@ -539,9 +539,17 @@ function PlaceFloor()
 	
 	SetupPreviousFloors();
 	
-	floor.position = 1;
+	if ((Math.floor(Math.random() * 2) + 1) == 1) // alternates starting side
+	{
+		floor.position = 1;
+		floor.speed = Math.abs(floor.speed) + 0.25;
+	}
+	else
+	{
+		floor.position = canvasWidth - floor.width - 1;
+		floor.speed = -Math.abs(floor.speed) - 0.25;;
+	}
 	floorLevel++;
-	floor.speed +=0.25;
 }
 
 function ApplyBonus()
