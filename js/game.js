@@ -8,19 +8,30 @@ var canvasContext = null
 	canvasHeight = 0,
 	canvasWidth = 0;
 	
+	var buildingImage = {
+		source : new Image(),
+		width: 488,
+		height: 530
+	};
+
 // variables for the current floor
 var floor = {
+	spriteID: 1,
 	width : 300,
 	height : 60,
 	position : 0,
 	speed : 3,
 };
 	targetPosition = 100;
-	marginOfError = 5;
+	marginOfError = 10;
 	
 var previousFloors = new Array(5);
 
+// variables for displaying game information
 
+var floorLevel = 0,
+	combo = 0,
+	Winnings = 0;
 
 window.onload = function() 
 {
@@ -58,6 +69,7 @@ function Update()
 
 function Draw()
 {
+	DrawGameInfo();
 	DrawCurrentFloor();
 	DrawDebugLines();
 	DrawPreviousFloors();
@@ -75,10 +87,18 @@ function UpdateCurrentFloor()
 
 function DrawCurrentFloor()
 {
-	canvasContext.beginPath();
-	canvasContext.rect(floor.position,(canvasHeight / 2) - floor.height, floor.width , floor.height);
-	canvasContext.fillStyle = 'blue';
-	canvasContext.fill();
+	var temp = GetSprite(floor.spriteID);
+      canvasContext.drawImage(buildingImage.source,
+	  temp.x,
+	  temp.y,
+	  temp.width,
+	  temp.height,
+	  floor.position,
+	  (canvasHeight / 2) - floor.height, 
+	  floor.width,
+	  floor.height);
+
+      buildingImage.source.src = 'resources/building.jpg';
 
 }
 function DrawDebugLines()
@@ -95,22 +115,67 @@ function DrawPreviousFloors()
 	{
 		if (previousFloors[i])
 		{
-			canvasContext.beginPath();
-			var temp = (canvasHeight / 2) + (floor.height *(i+1));
-			canvasContext.rect(previousFloors[i].position, (canvasHeight / 2) + (floor.height *(i)), previousFloors[i].width , floor.height);
-			canvasContext.fillStyle = 'blue';
-			canvasContext.fill();
-			canvasContext.lineWidth = 1;
-			canvasContext.strokeStyle = 'black';
-			canvasContext.stroke();
+			var temp = GetSprite(previousFloors[i].spriteID);
+			canvasContext.drawImage(buildingImage.source,
+			temp.x,
+			temp.y,
+			temp.width,
+			temp.height,
+			previousFloors[i].position,
+			(canvasHeight / 2) + (floor.height *(i)),
+			previousFloors[i].width,
+			floor.height);
+			
 		}
 	}
 }
 
+function GetSprite(id)
+{
+	var sprite = {
+		x: 0,
+		y: 0,
+		width: buildingImage.width,
+		height: buildingImage.height/3
+	};
+	
+	switch (id)
+	{
+
+		case 2:
+			sprite.y = sprite.height;
+		break;
+		case 3:
+			sprite.y = sprite.height  * 2;
+		break;
+	}
+
+	return sprite;
+}
+
+function DrawGameInfo()
+{
+	canvasContext.beginPath();
+	canvasContext.rect(0, 0, canvasWidth, 50);
+	canvasContext.fillStyle = '#B5E2F7';
+	canvasContext.fill();
+	
+	
+	canvasContext.fillStyle = 'blue';
+	canvasContext.font = 'italic 20pt Helvetica';
+	
+	var floorString = "Floor: " + floorLevel;
+	var comboString = "Combo: " + combo;
+	
+    canvasContext.fillText(floorString, 5, 40);
+	canvasContext.fillText(comboString, canvasWidth - canvasContext.measureText(comboString).width -5, 40);
+
+}
 function PlaceFloor()
 {
 	var difference = Math.abs(floor.position - targetPosition);
-	console.log("difference", difference);
+	
+	
 	if (difference > marginOfError)
 	{
 		floor.width -= difference;
@@ -126,17 +191,19 @@ function PlaceFloor()
 		{
 			targetPosition = floor.position;
 		}
+		combo = 0;
 	}
 	else
 	{
 		floor.position = targetPosition;
+		combo++;
 	}
 	
 	SetupPreviousFloors();
 	
 	floor.position = 1;
-	console.log(targetPosition);
-
+	floorLevel++;
+	floor.speed +=0.25;
 }
 
 function SetupPreviousFloors()
@@ -155,6 +222,7 @@ function SetupPreviousFloors()
 		
 	previousFloors[0] = {
 		width : floor.width,
-		position : tempPos
+		position : tempPos,
+		spriteID : Math.floor(Math.random() * 3) + 1 
 	};
 }
