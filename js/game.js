@@ -11,13 +11,7 @@ var canvasContext = null,
 	playing = false,
 	lost = false;
 	
-var buildingImage = {
-		source : new Image(),
-		width: 488,
-		height: 530
-	};
-
-	//variables for the various arrows used in the start screen
+//variables for the various arrows used in the start screen
 var arrows = {
 	UPimg : new Image(),
 	DOWNimg : new Image(),
@@ -41,18 +35,26 @@ var arrows = {
 	};
 
 
-// variables for the current floor
+// variables for the floors
 var floor = {
 	spriteID: 1,
 	width : 300,
 	height : 60,
 	position : 0,
 	speed : 3,
+	imageWidth :0
 };
 	targetPosition = 0;
 	marginOfError = 10;
+	totalSizeDifference = 0;
 	
 var previousFloors = new Array(5);
+
+var buildingImage = {
+		source : new Image(),
+		width: 488,
+		height: 530
+	};
 
 // variables for displaying game information
 
@@ -78,6 +80,7 @@ var title = {
 	width : 400,
 	height : 50
 };	
+
 // variables to calculate the betting
 var floorOdds = new Array(6);
 floorOdds[0] = {level : 40 , odds :"3:2" };
@@ -259,7 +262,8 @@ function StartGame()
 	floor.position = canvasWidth / 2;
 	floor.width = 300;
 	floor.speed = 3;
-	
+	buildingImage.width = 488;
+	floor.imageWidth = buildingImage.width;
 	playing = true;
 		
 	targetPosition = (canvasWidth / 2) - (floor.width / 2);
@@ -272,6 +276,7 @@ function StartGame()
 	{
 		previousFloors[i] = {
 			width : floor.width,
+			imageWidth :floor.imageWidth,
 			position : targetPosition,
 			spriteID : Math.floor(Math.random() * 3) + 1 
 		}
@@ -391,7 +396,7 @@ function DrawCurrentFloor()
       canvasContext.drawImage(buildingImage.source,
 	  temp.x,
 	  temp.y,
-	  temp.width,
+	  floor.imageWidth,
 	  temp.height,
 	  floor.position,
 	  (canvasHeight / 2) - floor.height, 
@@ -410,7 +415,7 @@ function DrawPreviousFloors()
 			canvasContext.drawImage(buildingImage.source,
 			temp.x,
 			temp.y,
-			temp.width,
+			previousFloors[i].imageWidth,
 			temp.height,
 			previousFloors[i].position,
 			(canvasHeight / 2) + (floor.height *(i)),
@@ -427,7 +432,7 @@ function GetSprite(id)
 		x: 0,
 		y: 0,
 		width: buildingImage.width,
-		height: buildingImage.height/3
+		height: buildingImage.height / 3
 	};
 	
 	switch (id)
@@ -513,6 +518,14 @@ function PlaceFloor()
 	{
 		floor.width -= difference;
 		
+		totalSizeDifference += difference;
+		while (totalSizeDifference >= 300 / 6) // reduces the size of future selected sprite to stop the image being squashed
+		{
+			floor.imageWidth -= 81;
+			totalSizeDifference -= 300 / 6;
+		}
+			console.log(totalSizeDifference);
+		
 		if (floor.width <= 0)
 		{
 			lost = true;
@@ -586,6 +599,7 @@ function SetupPreviousFloors()
 		
 	previousFloors[0] = {
 		width : floor.width,
+		imageWidth :floor.imageWidth,
 		position : tempPos,
 		spriteID : Math.floor(Math.random() * 3) + 1 
 	};
