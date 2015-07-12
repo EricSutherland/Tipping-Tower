@@ -1,4 +1,4 @@
-# Tipping-Tower
+# Tipping Tower
 
 Tipping tower is a simple game where the aim is to build your tower up to your target level to win money, with higher targets having higher odds. 
 To play simply download the project and open the index.html file in the browser of your choice.
@@ -15,12 +15,12 @@ Supported Browsers:
 - As the levels increase so will the speed of the floors movement increasing the difficultly as you get higher.
 - Perfect placements will cause a combo which can earn bonuses such as extra floors or slow speed.
 - Imperfect placements will reduce the size of the floor you have and make it harder to place the next floor on top.
-- you will win by reaching your target height and lose if you miss place the floor.
+- you will win by reaching your target height and lose if you misplace the floor.
 
 ##Further Improvements 
-- Mobile Scale: although it can be played on mobile devices, using the inbuilt chrome device mode, it would be beneficial to resize the canvas dependant on the devices screen size.
-- Bonus Slot Wheel: it was originally intended to have a slot wheel spin to decide which bonus to apply, with different amount of extra floors and slow speed, with the better ones being rarer.
-- Sound in IE and Safari: currently the chosen method of playing audio is not supported in IE and Safari cannot play sound without Quicktime, which can cause the game to not load.
+- **Mobile Scale:** although it can be played on mobile devices, using the inbuilt chrome device mode, it would be beneficial to resize the canvas dependant on the device's screen size.
+- **Bonus Slot Wheel:** it was originally intended to have a slot wheel spin to decide which bonus to apply, with different amount of extra floors and slow speed, with the better ones being rarer.
+- **Sound in IE and Safari:** currently the chosen method of playing audio is not supported in IE and Safari cannot play sound without Quicktime, which can cause the game to not load.
 
 ##Resource References 
 Arrow Images: https://pixabay.com/en/arrow-upwards-facing-up-north-31197/
