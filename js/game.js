@@ -63,7 +63,7 @@ var floorLevel = 0,
 	winnings = "",
 	target = 0,
 	bet = 0,
-	instructions = 'Welcome! The aim of the game is to build the tower to reach your target. You place a floor by simply tapping or clicking anywhere on the screen. You will have to time the placement right or you will end up with less room to build the next floor on!. As your tower gets higher and higher the speed will increase\n If you manage to place a floor perfectly 5x in a row you can earn one of the following bonuses:\n - Slow Speed\n - 2x Extra Floors',
+	instructions = 'Welcome! The aim of the game is to build the tower to reach your target. You place a floor by simply tapping or clicking anywhere on the screen. You will have to time the placement right or you will end up with less room to build the next floor on!. As your tower gets higher and higher the speed will increase. If you manage to place a floor perfectly 5x in a row you can earn either Slow Speed or Extra Floors!',
 	dispalyText = instructions;
 var playButton = {
 	img : new Image(),
