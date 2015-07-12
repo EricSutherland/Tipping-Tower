@@ -82,13 +82,14 @@ var title = {
 };	
 
 // variables to calculate the betting
-var floorOdds = new Array(6);
-floorOdds[0] = {level : 40 , odds :"3:2" };
-floorOdds[1] = {level : 50 , odds :"2:1" };
-floorOdds[2] = {level : 65 , odds :"5:1" };
-floorOdds[3] = {level : 80 , odds :"15:1"};
-floorOdds[4] = {level : 90 , odds :"20:1"};
-floorOdds[5] = {level : 100, odds :"35:1"};
+var floorOdds = new Array(7);
+floorOdds[0] = {level : 20 , odds :"7:5" };
+floorOdds[1] = {level : 35 , odds :"3:2" };
+floorOdds[2] = {level : 50 , odds :"2:1" };
+floorOdds[3] = {level : 65 , odds :"5:1" };
+floorOdds[4] = {level : 80 , odds :"15:1"};
+floorOdds[5] = {level : 90 , odds :"20:1"};
+floorOdds[6] = {level : 100, odds :"35:1"};
 
 var bettingAmounts = new Array(4);
 bettingAmounts[0] = { value: 10, unit : "p" };
@@ -166,7 +167,7 @@ function DisplayInfoScreen()
 	canvasContext.drawImage(title.img, title.x, title.y, title.width, title.height);
 	
 	canvasContext.fillStyle = 'blue';
-	canvasContext.font = 'italic 16.5px Helvetica';
+	canvasContext.font = 'italic 20px Helvetica';
 	
     wrapText(canvasContext, dispalyText, 25, 145, canvasWidth - 45 , 20);
 		
@@ -262,7 +263,6 @@ function StartGame()
 	floor.position = canvasWidth / 2;
 	floor.width = 300;
 	floor.speed = 3;
-	buildingImage.width = 488;
 	floor.imageWidth = buildingImage.width;
 	playing = true;
 		
@@ -294,13 +294,13 @@ function GameOver()
 	{
 		sounds.lose.play();
 		title.img.src = 'resources/game-over.png';
-		dispalyText = 'Oh No! Unfortunetly you didnt make it to your target level, better luck next time. Would you like to play again?';
+		dispalyText = 'Oh No! Unfortunetly you only made it ' + floorLevel +' Floors , better luck next time. Would you like to play again?';
 	}
 	else
 	{
 		sounds.win.play();
 		title.img.src = 'resources/won.png';
-		dispalyText = 'Congratdulations! You managed to make it to your target floor. ' + winnings + ' has been added to your account. Would you like to play again?';
+		dispalyText = 'Congratulations ! You managed to make it to your target floor. ' + winnings + ' has been added to your account. Would you like to play again?';
 	}
 }
 
@@ -521,10 +521,9 @@ function PlaceFloor()
 		totalSizeDifference += difference;
 		while (totalSizeDifference >= 300 / 6) // reduces the size of future selected sprite to stop the image being squashed
 		{
-			floor.imageWidth -= 81;
+			floor.imageWidth -= buildingImage.width/6;
 			totalSizeDifference -= 300 / 6;
 		}
-			console.log(totalSizeDifference);
 		
 		if (floor.width <= 0)
 		{
