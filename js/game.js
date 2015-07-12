@@ -11,13 +11,7 @@ var canvasContext = null,
 	playing = false,
 	lost = false;
 	
-var buildingImage = {
-		source : new Image(),
-		width: 488,
-		height: 530
-	};
-
-	//variables for the various arrows used in the start screen
+//variables for the various arrows used in the start screen
 var arrows = {
 	UPimg : new Image(),
 	DOWNimg : new Image(),
@@ -41,18 +35,26 @@ var arrows = {
 	};
 
 
-// variables for the current floor
+// variables for the floors
 var floor = {
 	spriteID: 1,
 	width : 300,
 	height : 60,
 	position : 0,
 	speed : 3,
+	imageWidth :0
 };
 	targetPosition = 0;
 	marginOfError = 10;
+	totalSizeDifference = 0;
 	
 var previousFloors = new Array(5);
+
+var buildingImage = {
+		source : new Image(),
+		width: 488,
+		height: 530
+	};
 
 // variables for displaying game information
 
@@ -61,7 +63,7 @@ var floorLevel = 0,
 	winnings = "",
 	target = 0,
 	bet = 0,
-	instructions = 'Welcome! The aim of the game is to build the tower to reach your target. You place a floor by simply tapping or clicking anywhere on the screen. You will have to time the placement right or you will end up with less room to build the next floor on!. As your tower gets higher and higher the speed will increase\n If you manage to place a floor perfectly 5x in a row you can earn one of the following bonuses:\n - Slow Speed\n - 2x Extra Floors',
+	instructions = 'Welcome! The aim of the game is to build the tower to reach your target. You place a floor by simply tapping or clicking anywhere on the screen. You will have to time the placement right or you will end up with less room to build the next floor on!. As your tower gets higher and higher the speed will increase. If you manage to place a floor perfectly 5x in a row you can earn either Slow Speed or Extra Floors!',
 	dispalyText = instructions;
 var playButton = {
 	img : new Image(),
@@ -78,14 +80,16 @@ var title = {
 	width : 400,
 	height : 50
 };	
+
 // variables to calculate the betting
-var floorOdds = new Array(6);
-floorOdds[0] = {level : 40 , odds :"3:2" };
-floorOdds[1] = {level : 50 , odds :"2:1" };
-floorOdds[2] = {level : 65 , odds :"5:1" };
-floorOdds[3] = {level : 80 , odds :"15:1"};
-floorOdds[4] = {level : 90 , odds :"20:1"};
-floorOdds[5] = {level : 100, odds :"35:1"};
+var floorOdds = new Array(7);
+floorOdds[0] = {level : 20 , odds :"7:5" };
+floorOdds[1] = {level : 35 , odds :"3:2" };
+floorOdds[2] = {level : 50 , odds :"2:1" };
+floorOdds[3] = {level : 65 , odds :"5:1" };
+floorOdds[4] = {level : 80 , odds :"15:1"};
+floorOdds[5] = {level : 90 , odds :"20:1"};
+floorOdds[6] = {level : 100, odds :"35:1"};
 
 var bettingAmounts = new Array(4);
 bettingAmounts[0] = { value: 10, unit : "p" };
@@ -163,7 +167,7 @@ function DisplayInfoScreen()
 	canvasContext.drawImage(title.img, title.x, title.y, title.width, title.height);
 	
 	canvasContext.fillStyle = 'blue';
-	canvasContext.font = 'italic 16.5px Helvetica';
+	canvasContext.font = 'italic 20px Helvetica';
 	
     wrapText(canvasContext, dispalyText, 25, 145, canvasWidth - 45 , 20);
 		
@@ -248,7 +252,7 @@ function CalculateWinings()
 	pence += betIncrease; 
 	
 	//checks if the amount is greater then a pound before storing
-	currentWinningCalculation = pence >= 100 ? "£" + (pence / 100) : pence + "p";	
+	currentWinningCalculation = pence >= 100 ? "£" + (pence / 100).toFixed(2) : pence + "p";	
 }
 
 function StartGame()
@@ -259,7 +263,7 @@ function StartGame()
 	floor.position = canvasWidth / 2;
 	floor.width = 300;
 	floor.speed = 3;
-	
+	floor.imageWidth = buildingImage.width;
 	playing = true;
 		
 	targetPosition = (canvasWidth / 2) - (floor.width / 2);
@@ -272,6 +276,7 @@ function StartGame()
 	{
 		previousFloors[i] = {
 			width : floor.width,
+			imageWidth :floor.imageWidth,
 			position : targetPosition,
 			spriteID : Math.floor(Math.random() * 3) + 1 
 		}
@@ -289,13 +294,13 @@ function GameOver()
 	{
 		sounds.lose.play();
 		title.img.src = 'resources/game-over.png';
-		dispalyText = 'Oh No! Unfortunetly you didnt make it to your target level, better luck next time. Would you like to play again?';
+		dispalyText = 'Oh No! Unfortunetly you only made it ' + floorLevel +' Floors , better luck next time. Would you like to play again?';
 	}
 	else
 	{
 		sounds.win.play();
 		title.img.src = 'resources/won.png';
-		dispalyText = 'Congratdulations! You managed to make it to your target floor. ' + winnings + ' has been added to your account. Would you like to play again?';
+		dispalyText = 'Congratulations ! You managed to make it to your target floor. ' + winnings + ' has been added to your account. Would you like to play again?';
 	}
 }
 
@@ -391,7 +396,7 @@ function DrawCurrentFloor()
       canvasContext.drawImage(buildingImage.source,
 	  temp.x,
 	  temp.y,
-	  temp.width,
+	  floor.imageWidth,
 	  temp.height,
 	  floor.position,
 	  (canvasHeight / 2) - floor.height, 
@@ -410,7 +415,7 @@ function DrawPreviousFloors()
 			canvasContext.drawImage(buildingImage.source,
 			temp.x,
 			temp.y,
-			temp.width,
+			previousFloors[i].imageWidth,
 			temp.height,
 			previousFloors[i].position,
 			(canvasHeight / 2) + (floor.height *(i)),
@@ -427,7 +432,7 @@ function GetSprite(id)
 		x: 0,
 		y: 0,
 		width: buildingImage.width,
-		height: buildingImage.height/3
+		height: buildingImage.height / 3
 	};
 	
 	switch (id)
@@ -513,6 +518,13 @@ function PlaceFloor()
 	{
 		floor.width -= difference;
 		
+		totalSizeDifference += difference;
+		while (totalSizeDifference >= 300 / 6) // reduces the size of future selected sprite to stop the image being squashed
+		{
+			floor.imageWidth -= buildingImage.width/6;
+			totalSizeDifference -= 300 / 6;
+		}
+		
 		if (floor.width <= 0)
 		{
 			lost = true;
@@ -539,9 +551,17 @@ function PlaceFloor()
 	
 	SetupPreviousFloors();
 	
-	floor.position = 1;
+	if ((Math.floor(Math.random() * 2) + 1) == 1) // alternates starting side
+	{
+		floor.position = 1;
+		floor.speed = Math.abs(floor.speed) + 0.25;
+	}
+	else
+	{
+		floor.position = canvasWidth - floor.width - 1;
+		floor.speed = -Math.abs(floor.speed) - 0.25;;
+	}
 	floorLevel++;
-	floor.speed +=0.25;
 }
 
 function ApplyBonus()
@@ -578,6 +598,7 @@ function SetupPreviousFloors()
 		
 	previousFloors[0] = {
 		width : floor.width,
+		imageWidth :floor.imageWidth,
 		position : tempPos,
 		spriteID : Math.floor(Math.random() * 3) + 1 
 	};
